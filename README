@@ -1,3 +1,25 @@
+@Marv
+
+to run server it's server.sh
+
+to run client it's client.sh 10.0.2.x (the server ip)
+
+running stun.sh sets up the appropriate ip addr/tun/route for server
+running ctun.sh does the same for client
+
+to run the bash stuff use
+
+  chmod +x TARGET_FILE
+
+on each bash script
+
+ez pz
+
+
+
+
+
+
 simpletun, a (too) simple tunnelling program.
 
 -------
