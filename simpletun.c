@@ -20,6 +20,9 @@
  * is to be taken "as is" and without any kind of warranty, implicit or   *
  * explicit. See the file LICENSE for further details.                    *
  *************************************************************************/ 
+#include <openssl/conf.h>
+#include <openssl/evp.h>
+#include <openssl/err.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,9 +40,11 @@
 #include <sys/time.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <openssl/evp.h>
+#include <openssl/hmac.h>
 
 /* buffer for reading from tun/tap interface, must be >= 1500 */
-#define BUFSIZE 2000   
+#define BUFSIZE 128   
 #define CLIENT 0
 #define SERVER 1
 #define PORT 55555
@@ -262,12 +267,14 @@ int decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
   return plaintext_len;
 }
 
+
 int main(int argc, char *argv[]) {
 
-    unsigned char *key = (unsigned char *)"01234567890123456789012345678901";
+	char mac[1000];
+	char hash[65];
+    unsigned char *key = (unsigned char *)"test";
+    keylen = sizeof(key);
     unsigned char *iv = (unsigned char *)"0123456789012345";
-    unsigned char *plaintext =
-                  (unsigned char *)"The quick brown fox jumps over the lazy dog";
     unsigned char ciphertext[128];
     unsigned char decryptedtext[128];
   
@@ -445,13 +452,28 @@ int main(int argc, char *argv[]) {
 
 		if(FD_ISSET(tap_fd, &rd_set)){
 
+			memset(&buffer, '\0', BUFSIZE);
 			nread = cread(tap_fd, buffer, BUFSIZE);
 			tap2net++;
 			do_debug("TAP2NET %lu: Read %d bytes from the tap interface\n", tap2net, nread);
-			if ((nwrite = sendto(sock_fd, buffer, nread, 0, (struct sockaddr *)&remote, remotelen)) == -1) {
+
+			encrypt(buffer, strlen((char *) buffer), kev, iv, ciphertext);
+
+			printf("%s\n", buffer);
+			printf("%s\n", ciphertext);
+
+			// memset(&mac, '\0', sizeof(mac));
+			// mac =  (char *) HMAC(EVP_sha256(), key, keylen, ciphertext, ciphertext_len, hashed_text, hash);
+
+			if ((nwrite = sendto(sock_fd, ciphertext, ciphertext_len, 0, (struct sockaddr *)&remote, remotelen)) == -1) {
 				perror("sendto");
 				exit(1);
 			}
+			// if ((nwrite = sendto(sock_fd, mac, strlen(mac), 0, (struct sockaddr *)&remote, remotelen)) == -1) {
+			// 	perror("sendto");
+			// 	exit(1);
+			// }
+
 
 			do_debug("TAP2NET %lu: Written %d bytes to the network\n", tap2net, nwrite);
 		}
