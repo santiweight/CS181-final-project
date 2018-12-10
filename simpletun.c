@@ -58,31 +58,31 @@ char *progname;
  **************************************************************************/
 int tun_alloc(char *dev, int flags) {
 
-  struct ifreq ifr;
-  int fd, err;
+	struct ifreq ifr;
+	int fd, err;
 
-  if( (fd = open("/dev/net/tun", O_RDWR)) < 0 ) {
-    perror("Opening /dev/net/tun");
-    return fd;
-  }
+	if( (fd = open("/dev/net/tun", O_RDWR)) < 0 ) {
+		perror("Opening /dev/net/tun");
+		return fd;
+	}
 
-  memset(&ifr, 0, sizeof(ifr));
+	memset(&ifr, 0, sizeof(ifr));
 
-  ifr.ifr_flags = flags;
+	ifr.ifr_flags = flags;
 
-  if (*dev) {
-    strncpy(ifr.ifr_name, dev, IFNAMSIZ);
-  }
+	if (*dev) {
+		strncpy(ifr.ifr_name, dev, IFNAMSIZ);
+	}
 
-  if( (err = ioctl(fd, TUNSETIFF, (void *)&ifr)) < 0 ) {
-    perror("ioctl(TUNSETIFF)");
-    close(fd);
-    return err;
-  }
+	if( (err = ioctl(fd, TUNSETIFF, (void *)&ifr)) < 0 ) {
+		perror("ioctl(TUNSETIFF)");
+		close(fd);
+		return err;
+	}
 
-  strcpy(dev, ifr.ifr_name);
+	strcpy(dev, ifr.ifr_name);
 
-  return fd;
+	return fd;
 }
 
 /**************************************************************************
@@ -90,14 +90,14 @@ int tun_alloc(char *dev, int flags) {
  *        returned.                                                       *
  **************************************************************************/
 int cread(int fd, char *buf, int n){
-  
-  int nread;
+	
+	int nread;
 
-  if((nread=read(fd, buf, n))<0){
-    perror("Reading data");
-    exit(1);
-  }
-  return nread;
+	if((nread=read(fd, buf, n))<0){
+		perror("Reading data");
+		exit(1);
+	}
+	return nread;
 }
 
 /**************************************************************************
@@ -105,14 +105,14 @@ int cread(int fd, char *buf, int n){
  *         returned.                                                      *
  **************************************************************************/
 int cwrite(int fd, char *buf, int n){
-  
-  int nwrite;
+	
+	int nwrite;
 
-  if((nwrite=write(fd, buf, n))<0){
-    perror("Writing data");
-    exit(1);
-  }
-  return nwrite;
+	if((nwrite=write(fd, buf, n))<0){
+		perror("Writing data");
+		exit(1);
+	}
+	return nwrite;
 }
 
 /**************************************************************************
@@ -121,31 +121,31 @@ int cwrite(int fd, char *buf, int n){
  **************************************************************************/
 int read_n(int fd, char *buf, int n) {
 
-  int nread, left = n;
+	int nread, left = n;
 
-  while(left > 0) {
-    if ((nread = cread(fd, buf, left))==0){
-      return 0 ;      
-    }else {
-      left -= nread;
-      buf += nread;
-    }
-  }
-  return n;  
+	while(left > 0) {
+		if ((nread = cread(fd, buf, left))==0){
+			return 0 ;      
+		}else {
+			left -= nread;
+			buf += nread;
+		}
+	}
+	return n;  
 }
 
 /**************************************************************************
  * do_debug: prints debugging stuff (doh!)                                *
  **************************************************************************/
 void do_debug(char *msg, ...){
-  
-  va_list argp;
-  
-  if(debug){
-  va_start(argp, msg);
-  vfprintf(stderr, msg, argp);
-  va_end(argp);
-  }
+	
+	va_list argp;
+	
+	if(debug){
+		va_start(argp, msg);
+		vfprintf(stderr, msg, argp);
+		va_end(argp);
+	}
 }
 
 /**************************************************************************
@@ -153,137 +153,137 @@ void do_debug(char *msg, ...){
  **************************************************************************/
 void my_err(char *msg, ...) {
 
-  va_list argp;
-  
-  va_start(argp, msg);
-  vfprintf(stderr, msg, argp);
-  va_end(argp);
+	va_list argp;
+	
+	va_start(argp, msg);
+	vfprintf(stderr, msg, argp);
+	va_end(argp);
 }
 
 /**************************************************************************
  * usage: prints usage and exits.                                         *
  **************************************************************************/
 void usage(void) {
-  fprintf(stderr, "Usage:\n");
-  fprintf(stderr, "%s -i <ifacename> [-s|-c <serverIP>] [-p <port>] [-u|-a] [-d]\n", progname);
-  fprintf(stderr, "%s -h\n", progname);
-  fprintf(stderr, "\n");
-  fprintf(stderr, "-i <ifacename>: Name of interface to use (mandatory)\n");
-  fprintf(stderr, "-s|-c <serverIP>: run in server mode (-s), or specify server address (-c <serverIP>) (mandatory)\n");
-  fprintf(stderr, "-p <port>: port to listen on (if run in server mode) or to connect to (in client mode), default 55555\n");
-  fprintf(stderr, "-u|-a: use TUN (-u, default) or TAP (-a)\n");
-  fprintf(stderr, "-d: outputs debug information while running\n");
-  fprintf(stderr, "-h: prints this help text\n");
-  exit(1);
+	fprintf(stderr, "Usage:\n");
+	fprintf(stderr, "%s -i <ifacename> [-s|-c <serverIP>] [-p <port>] [-u|-a] [-d]\n", progname);
+	fprintf(stderr, "%s -h\n", progname);
+	fprintf(stderr, "\n");
+	fprintf(stderr, "-i <ifacename>: Name of interface to use (mandatory)\n");
+	fprintf(stderr, "-s|-c <serverIP>: run in server mode (-s), or specify server address (-c <serverIP>) (mandatory)\n");
+	fprintf(stderr, "-p <port>: port to listen on (if run in server mode) or to connect to (in client mode), default 55555\n");
+	fprintf(stderr, "-u|-a: use TUN (-u, default) or TAP (-a)\n");
+	fprintf(stderr, "-d: outputs debug information while running\n");
+	fprintf(stderr, "-h: prints this help text\n");
+	exit(1);
 }
 
 int main(int argc, char *argv[]) {
-  
-  int tap_fd, option;
-  int flags = IFF_TUN;
-  char if_name[IFNAMSIZ] = "";
-  int header_len = IP_HDR_LEN;
-  int maxfd;
-  uint16_t nread, nwrite, plength;
+	
+	int tap_fd, option;
+	int flags = IFF_TUN;
+	char if_name[IFNAMSIZ] = "";
+	int header_len = IP_HDR_LEN;
+	int maxfd;
+	uint16_t nread, nwrite, plength;
 //  uint16_t total_len, ethertype;
-  char buffer[BUFSIZE];
-  struct sockaddr_in local, remote;
-  char remote_ip[16] = "";
-  unsigned short int port = PORT;
-  int sock_fd, optval = 1;
-  socklen_t remotelen;
+	char buffer[BUFSIZE];
+	struct sockaddr_in local, remote;
+	char remote_ip[16] = "";
+	unsigned short int port = PORT;
+	int sock_fd, optval = 1;
+	socklen_t remotelen;
   int cliserv = -1;    /* must be specified on cmd line */
-  unsigned long int tap2net = 0, net2tap = 0;
+	unsigned long int tap2net = 0, net2tap = 0;
 
-  progname = argv[0];
-  
+	progname = argv[0];
+	
   /* Check command line options */
-  while((option = getopt(argc, argv, "i:sc:p:uahd")) > 0){
-    switch(option) {
-      case 'd':
-        debug = 1;
-        break;
-      case 'h':
-        usage();
-        break;
-      case 'i':
-        strncpy(if_name,optarg,IFNAMSIZ-1);
-        break;
-      case 's':
-        cliserv = SERVER;
-        break;
-      case 'c':
-        cliserv = CLIENT;
-        strncpy(remote_ip,optarg,15);
-        break;
-      case 'p':
-        port = atoi(optarg);
-        break;
-      case 'u':
-        flags = IFF_TUN;
-        break;
-      case 'a':
-        flags = IFF_TAP;
-        header_len = ETH_HDR_LEN;
-        break;
-      default:
-        my_err("Unknown option %c\n", option);
-        usage();
-    }
-  }
+	while((option = getopt(argc, argv, "i:sc:p:uahd")) > 0){
+		switch(option) {
+			case 'd':
+			debug = 1;
+			break;
+			case 'h':
+			usage();
+			break;
+			case 'i':
+			strncpy(if_name,optarg,IFNAMSIZ-1);
+			break;
+			case 's':
+			cliserv = SERVER;
+			break;
+			case 'c':
+			cliserv = CLIENT;
+			strncpy(remote_ip,optarg,15);
+			break;
+			case 'p':
+			port = atoi(optarg);
+			break;
+			case 'u':
+			flags = IFF_TUN;
+			break;
+			case 'a':
+			flags = IFF_TAP;
+			header_len = ETH_HDR_LEN;
+			break;
+			default:
+			my_err("Unknown option %c\n", option);
+			usage();
+		}
+	}
 
-  argv += optind;
-  argc -= optind;
+	argv += optind;
+	argc -= optind;
 
-  if(argc > 0){
-    my_err("Too many options!\n");
-    usage();
-  }
+	if(argc > 0){
+		my_err("Too many options!\n");
+		usage();
+	}
 
-  if(*if_name == '\0'){
-    my_err("Must specify interface name!\n");
-    usage();
-  }else if(cliserv < 0){
-    my_err("Must specify client or server mode!\n");
-    usage();
-  }else if((cliserv == CLIENT)&&(*remote_ip == '\0')){
-    my_err("Must specify server address!\n");
-    usage();
-  }
+	if(*if_name == '\0'){
+		my_err("Must specify interface name!\n");
+		usage();
+	}else if(cliserv < 0){
+		my_err("Must specify client or server mode!\n");
+		usage();
+	}else if((cliserv == CLIENT)&&(*remote_ip == '\0')){
+		my_err("Must specify server address!\n");
+		usage();
+	}
 
   /* initialize tun/tap interface */
-  if ( (tap_fd = tun_alloc(if_name, flags | IFF_NO_PI)) < 0 ) {
-    my_err("Error connecting to tun/tap interface %s!\n", if_name);
-    exit(1);
-  }
+	if ( (tap_fd = tun_alloc(if_name, flags | IFF_NO_PI)) < 0 ) {
+		my_err("Error connecting to tun/tap interface %s!\n", if_name);
+		exit(1);
+	}
 
-  do_debug("Successfully connected to interface %s\n", if_name);
+	do_debug("Successfully connected to interface %s\n", if_name);
 
-  if ( (sock_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-    printf("here is the bad line");
-    perror("socket()");
-    exit(1);
-  }
+	if ( (sock_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+		printf("here is the bad line");
+		perror("socket()");
+		exit(1);
+	}
 
- 	if(cliserv==CLIENT){
+	if(cliserv==CLIENT){
 
-	    memset(&remote, 0, sizeof(remote));
-	    remote.sin_family = AF_INET;
-	    remote.sin_addr.s_addr = inet_addr(remote_ip);
-	    remote.sin_port = htons(port);
+		memset(&remote, 0, sizeof(remote));
+		remote.sin_family = AF_INET;
+		remote.sin_addr.s_addr = inet_addr(remote_ip);
+		remote.sin_port = htons(port);
 
-	    strcpy(buffer, "connect");
+		strcpy(buffer, "connect");
 
-	    int send_b;
-	    int recv_b;
-	    remotelen = sizeof(remote);
+		int send_b;
+		int recv_b;
+		remotelen = sizeof(remote);
 		send_b = sendto(sock_fd, buffer, strlen(buffer), 0, (struct sockaddr *) &remote, remotelen);
 		recv_b = recvfrom(sock_fd, buffer, BUFSIZE, 0, (struct sockaddr *)&remote, &remotelen);
 
-    	buffer[recv_b] = '\0';
+		buffer[recv_b] = '\0';
 
-	    do_debug("CLIENT: Connected to server %s\n", inet_ntoa(remote.sin_addr));
-    
+		do_debug("CLIENT: Connected to server %s\n", inet_ntoa(remote.sin_addr));
+		
 		
 
 	} else {
@@ -313,74 +313,64 @@ int main(int argc, char *argv[]) {
 
 		do_debug("SERVER: Client connected from %s\n", inet_ntoa(remote.sin_addr));
 
-  }
-  
+	}
+	
   /* use select() to handle two descriptors at once */
-  maxfd = (tap_fd > sock_fd)?tap_fd:sock_fd;
+	maxfd = (tap_fd > sock_fd)?tap_fd:sock_fd;
 
-  while(1) {
-    
-    int ret;
-    fd_set rd_set;
+	while(1) {
+		
+		int ret;
+		fd_set rd_set;
 
-    FD_ZERO(&rd_set);
-    FD_SET(tap_fd, &rd_set); FD_SET(sock_fd, &rd_set);
+		FD_ZERO(&rd_set);
+		FD_SET(tap_fd, &rd_set); FD_SET(sock_fd, &rd_set);
 
-    ret = select(maxfd + 1, &rd_set, NULL, NULL, NULL);
+		ret = select(maxfd + 1, &rd_set, NULL, NULL, NULL);
 
-    if (ret < 0 && errno == EINTR){
-      continue;
-    }
-
-    if (ret < 0) {
-      perror("select()");
-      exit(1);
-    }
-
-    if(FD_ISSET(tap_fd, &rd_set)){
-     
-	    nread = cread(tap_fd, buffer, BUFSIZE);
-	    tap2net++;
-	    do_debug("TAP2NET %lu: Read %d bytes from the tap interface\n", tap2net, nread);
-	    if ((nwrite = sendto(sock_fd, buffer, nread, 0, (struct sockaddr *)&remote, remotelen)) == -1) {
-	        perror("sendto");
-	        exit(1);
-	    }
-
-      /* write length + packet */
-    //   plength = htons(nread);
-    //   nwrite = cwrite(sock_fd, (char *)&plength, sizeof(plength));
-    //   nwrite = cwrite(sock_fd, buffer, nread);
-	    do_debug("TAP2NET %lu: Written %d bytes to the network\n", tap2net, nwrite);
-    }
-    if(FD_ISSET(sock_fd, &rd_set)){
-
-      // nread = read_n(sock_fd, (char *)&plength, sizeof(plength));   
-      nread = recvfrom(sock_fd, buffer, BUFSIZE, 0, (struct sockaddr *)&remote, &remotelen);
-      	if(nread == 0) {
-	        /* ctrl-c at the other end */
-			exit(0);
+		if (ret < 0 && errno == EINTR){
+			continue;
 		}
 
-      	net2tap++;
+		if (ret < 0) {
+			perror("select()");
+			exit(1);
+		}
 
-      /* read packet */
-    //   nread = read_n(sock_fd, buffer, ntohs(plength));
-        if (nread > 0) {
-            buffer[nread] = 0;
-        } 
-        else {
-            printf("Recv error in receive!\n");
-            exit(0);
-        }
-        do_debug("NET2TAP %lu: Read %d bytes from the network\n", net2tap, nread);
-        /* now buffer[] contains a full packet or frame, write it into the tun/tap interface */ 
-        nwrite = cwrite(tap_fd, buffer, nread);
-        // if ((sendto(sock_fd, buffer, strlen(buffer), 0, (struct sockaddr *)&remote, remotelen)) < 0)
-        //         perror("sendto");
-        do_debug("NET2TAP %lu: Written %d bytes to the tap interface\n", net2tap, nwrite);
-    }
+		if(FD_ISSET(tap_fd, &rd_set)){
+			
+			nread = cread(tap_fd, buffer, BUFSIZE);
+			tap2net++;
+			do_debug("TAP2NET %lu: Read %d bytes from the tap interface\n", tap2net, nread);
+			if ((nwrite = sendto(sock_fd, buffer, nread, 0, (struct sockaddr *)&remote, remotelen)) == -1) {
+				perror("sendto");
+				exit(1);
+			}
+
+			do_debug("TAP2NET %lu: Written %d bytes to the network\n", tap2net, nwrite);
+		}
+		if(FD_ISSET(sock_fd, &rd_set)){
+
+			nread = recvfrom(sock_fd, buffer, BUFSIZE, 0, (struct sockaddr *)&remote, &remotelen);
+			if(nread == 0) {
+				exit(0);
+			}
+
+			net2tap++;
+
+			if (nread > 0) {
+				buffer[nread] = 0;
+			} 
+			else {
+				printf("Recv error in receive!\n");
+				exit(0);
+			}
+			do_debug("NET2TAP %lu: Read %d bytes from the network\n", net2tap, nread);
+			nwrite = cwrite(tap_fd, buffer, nread);
+			
+			do_debug("NET2TAP %lu: Written %d bytes to the tap interface\n", net2tap, nwrite);
+		}
 	}
-  
-  	return(0);
- }
+	
+	return(0);
+}
