@@ -35,6 +35,14 @@ int main (void)
   /* Add a NULL terminator. We are expecting printable text */
   decryptedtext[decryptedtext_len] = '\0';
 
+while(1) {
+		if ((nread = cread(tap_fd, buffer,BUFSIZE)) > 0) {
+			exit(1);
+		}
+	}
+
+
+
   /* Show the decrypted text */
   printf("Decrypted text is:\n");
   printf("%s\n", decryptedtext);

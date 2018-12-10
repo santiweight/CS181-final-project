@@ -369,6 +369,22 @@ int main(int argc, char *argv[]) {
 		my_err("Error connecting to tun/tap interface %s!\n", if_name);
 		exit(1);
 	}
+	printf("entering while");
+	while(1) {
+		if ((nread = cread(tap_fd, buffer,BUFSIZE)) > 0) {
+			printf("\n\n%s\n", buffer);
+			do_debug("TAP2NET : Read %d bytes from the tap interface\n",  nread);
+			buffer[nread] = '\0';
+			printf("%i\n",nread);
+
+			ciphertext_len = encrypt((unsigned char *) buffer, nread, key, iv, ciphertext);
+
+			decryptedtext_len = decrypt(ciphertext, ciphertext_len, key, iv, decryptedtext);
+
+			printf("%s\n", buffer);
+			printf("%s\n", decryptedtext);
+		}
+	}
 
 	do_debug("Successfully connected to interface %s\n", if_name);
 
@@ -456,11 +472,13 @@ int main(int argc, char *argv[]) {
 			nread = cread(tap_fd, buffer, BUFSIZE);
 			tap2net++;
 			do_debug("TAP2NET %lu: Read %d bytes from the tap interface\n", tap2net, nread);
-
-			printf("\n\n%s\n", buffer);
 			buffer[nread] = '\0';
+			printf("%i\n",nread);
 
 			ciphertext_len = encrypt((unsigned char *) buffer, nread, key, iv, ciphertext);
+
+			printf("%s\n", buffer);
+			printf("%s\n", ciphertext);
 
 			// memset(&mac, '\0', sizeof(mac));
 			// mac =  (char *) HMAC(EVP_sha256(), key, keylen, ciphertext, ciphertext_len, hashed_text, hash);
@@ -494,11 +512,6 @@ int main(int argc, char *argv[]) {
 				exit(0);
 			}
 			do_debug("NET2TAP %lu: Read %d bytes from the network\n", net2tap, nread);
-
-			decryptedtext_len = decrypt(ciphertext, ciphertext_len, key, iv, decryptedtext);
-
-			printf("%s\n", decryptedtext);
-
 			nwrite = cwrite(tap_fd, buffer, nread);
 
 			do_debug("NET2TAP %lu: Written %d bytes to the tap interface\n", net2tap, nwrite);
