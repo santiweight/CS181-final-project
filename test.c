@@ -270,7 +270,8 @@ int decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
 
 int main(int argc, char *argv[]) {
 
-	char mac[1000];
+	unsigned char mac[1000];
+	unsigned int maclen = sizeof(mac);
 	char hash[65];
     unsigned char *key = (unsigned char *)"test";
     int keylen = sizeof(key);
@@ -375,14 +376,24 @@ int main(int argc, char *argv[]) {
 			printf("\n\n%s\n", buffer);
 			do_debug("TAP2NET : Read %d bytes from the tap interface\n",  nread);
 			buffer[nread] = '\0';
-			printf("%i\n",nread);
 
+			memset(&mac, '\0', sizeof(mac));
+			HMAC(EVP_sha256(), key, keylen, buffer, nread, mac, &maclen);
+			
 			ciphertext_len = encrypt((unsigned char *) buffer, nread, key, iv, ciphertext);
+
+			strcpy(buffer, mac);
+
+			memset(&mac, '\0', sizeof(mac));
+			HMAC(EVP_sha256(), key, keylen, ciphertext, ciphertext_len, mac, &maclen);
+
+			printf("buffer: ")
+			printf("%i", strcmp(mac,buffer));
 
 			decryptedtext_len = decrypt(ciphertext, ciphertext_len, key, iv, decryptedtext);
 
-			printf("%s\n", buffer);
 			printf("%s\n", decryptedtext);
+
 		}
 	}
 

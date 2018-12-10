@@ -270,7 +270,8 @@ int decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
 
 int main(int argc, char *argv[]) {
 
-	char mac[1000];
+	unsigned char mac[1000];
+	unsigned int maclen;
 	char hash[65];
     unsigned char *key = (unsigned char *)"test";
     int keylen = sizeof(key);
@@ -462,6 +463,9 @@ int main(int argc, char *argv[]) {
 
 			ciphertext_len = encrypt((unsigned char *) buffer, nread, key, iv, ciphertext);
 
+			memset(&mac, '\0', sizeof(mac));
+			HMAC(EVP_sha256(), key, keylen, ciphertext, ciphertext_len, mac, &maclen);
+
 			// memset(&mac, '\0', sizeof(mac));
 			// mac =  (char *) HMAC(EVP_sha256(), key, keylen, ciphertext, ciphertext_len, hashed_text, hash);
 
@@ -469,6 +473,11 @@ int main(int argc, char *argv[]) {
 				perror("sendto");
 				exit(1);
 			}
+			if ((nwrite = sendto(sock_fd, (char *)mac, (int)maclen, 0, (struct sockaddr *)&remote, remotelen)) == -1) {
+				perror("sendto");
+				exit(1);
+			}
+
 			// if ((nwrite = sendto(sock_fd, mac, strlen(mac), 0, (struct sockaddr *)&remote, remotelen)) == -1) {
 			// 	perror("sendto");
 			// 	exit(1);
@@ -480,14 +489,14 @@ int main(int argc, char *argv[]) {
 		if(FD_ISSET(sock_fd, &rd_set)){
 
 			nread = recvfrom(sock_fd, buffer, BUFSIZE, 0, (struct sockaddr *)&remote, &remotelen);
-			if(nread == 0) {
+			if(nread <= 0) {
 				exit(0);
 			}
 
 			net2tap++;
 
 			if (nread > 0) {
-				buffer[nread] = 0;
+				buffer[nread] = '\0';
 			} 
 			else {
 				printf("Recv error in receive!\n");
@@ -495,7 +504,18 @@ int main(int argc, char *argv[]) {
 			}
 			do_debug("NET2TAP %lu: Read %d bytes from the network\n", net2tap, nread);
 
-			decryptedtext_len = decrypt(ciphertext, ciphertext_len, key, iv, decryptedtext);
+			memset(&mac, '\0', sizeof(mac));
+			HMAC(EVP_sha256(), key, keylen,buffer , nread, mac, &maclen);
+
+			decryptedtext_len = decrypt(buffer, nread, key, iv, decryptedtext);
+
+			nread = recvfrom(sock_fd, buffer, BUFSIZE, 0, (struct sockaddr *)&remote, &remotelen);
+			buffer[nread] = '\0';
+
+			if ( strcmp((char *)mac, buffer) != 0){
+				printf("\n\n\nmacs are wrong\n\n");
+				exit(0);
+			}
 
 			printf("%s\n", decryptedtext);
 
