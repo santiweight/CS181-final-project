@@ -519,7 +519,7 @@ int main(int argc, char *argv[]) {
 
 			printf("%s\n", decryptedtext);
 
-			nwrite = cwrite(tap_fd, buffer, nread);
+			nwrite = cwrite(tap_fd, decryptedtext, decryptedtext_len);
 
 			do_debug("NET2TAP %lu: Written %d bytes to the tap interface\n", net2tap, nwrite);
 		}
