@@ -90,7 +90,7 @@ int tun_alloc(char *dev, int flags) {
  *        returned.                                                       *
  **************************************************************************/
 int cread(int fd, char *buf, int n){
-	
+
 	int nread;
 
 	if((nread=read(fd, buf, n))<0){
@@ -105,7 +105,7 @@ int cread(int fd, char *buf, int n){
  *         returned.                                                      *
  **************************************************************************/
 int cwrite(int fd, char *buf, int n){
-	
+
 	int nwrite;
 
 	if((nwrite=write(fd, buf, n))<0){
@@ -138,9 +138,9 @@ int read_n(int fd, char *buf, int n) {
  * do_debug: prints debugging stuff (doh!)                                *
  **************************************************************************/
 void do_debug(char *msg, ...){
-	
+
 	va_list argp;
-	
+
 	if(debug){
 		va_start(argp, msg);
 		vfprintf(stderr, msg, argp);
@@ -154,7 +154,7 @@ void do_debug(char *msg, ...){
 void my_err(char *msg, ...) {
 
 	va_list argp;
-	
+
 	va_start(argp, msg);
 	vfprintf(stderr, msg, argp);
 	va_end(argp);
@@ -178,7 +178,7 @@ void usage(void) {
 }
 
 int main(int argc, char *argv[]) {
-	
+
 	int tap_fd, option;
 	int flags = IFF_TUN;
 	char if_name[IFNAMSIZ] = "";
@@ -196,7 +196,7 @@ int main(int argc, char *argv[]) {
 	unsigned long int tap2net = 0, net2tap = 0;
 
 	progname = argv[0];
-	
+
   /* Check command line options */
 	while((option = getopt(argc, argv, "i:sc:p:uahd")) > 0){
 		switch(option) {
@@ -283,7 +283,7 @@ int main(int argc, char *argv[]) {
 		buffer[recv_b] = '\0';
 
 		do_debug("CLIENT: Connected to server %s\n", inet_ntoa(remote.sin_addr));
-		
+
 		
 
 	} else {
@@ -314,12 +314,12 @@ int main(int argc, char *argv[]) {
 		do_debug("SERVER: Client connected from %s\n", inet_ntoa(remote.sin_addr));
 
 	}
-	
+
   /* use select() to handle two descriptors at once */
 	maxfd = (tap_fd > sock_fd)?tap_fd:sock_fd;
 
 	while(1) {
-		
+
 		int ret;
 		fd_set rd_set;
 
@@ -338,7 +338,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		if(FD_ISSET(tap_fd, &rd_set)){
-			
+
 			nread = cread(tap_fd, buffer, BUFSIZE);
 			tap2net++;
 			do_debug("TAP2NET %lu: Read %d bytes from the tap interface\n", tap2net, nread);
@@ -367,10 +367,10 @@ int main(int argc, char *argv[]) {
 			}
 			do_debug("NET2TAP %lu: Read %d bytes from the network\n", net2tap, nread);
 			nwrite = cwrite(tap_fd, buffer, nread);
-			
+
 			do_debug("NET2TAP %lu: Written %d bytes to the tap interface\n", net2tap, nwrite);
 		}
 	}
-	
+
 	return(0);
 }
